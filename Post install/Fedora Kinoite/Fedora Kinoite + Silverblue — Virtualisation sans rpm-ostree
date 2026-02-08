@@ -1,0 +1,119 @@
+# 🧩 Fedora Kinoite / Silverblue — Virtualisation sans rpm-ostree
+
+> **Objectif :** Faire tourner des machines virtuelles avec QEMU + libvirt dans Fedora **Kinoite / Silverblue**, sans casser l’OSTree, sans `sudo`, et sans passer par Toolbox.
+
+---
+
+## 🧱 Principe général
+
+Les distributions **immuables Fedora** (Kinoite, Silverblue, Sericea, etc.) ne permettent pas d’installer directement des paquets systèmes (`libvirt`, `qemu-kvm`, etc.) sans `rpm-ostree overlay`.
+
+Mais grâce à **Virt-Manager en Flatpak** et son extension QEMU, il est possible d’obtenir une pile de virtualisation complète **en espace utilisateur** :
+
+- **Virt-Manager (GUI)** → application Flatpak (`org.virt_manager.virt-manager`)
+- **QEMU + libvirt** → extension Flatpak (`org.virt_manager.virt_manager.Extension.Qemu`)
+- Aucun accès root requis
+- Aucun impact sur le système de base (`/usr` inchangé)
+
+---
+
+## ⚙️ Installation
+
+### 1. Installer Virt-Manager (Flatpak)
+```bash
+flatpak install flathub org.virt_manager.virt-manager
+
+2. Installer le module QEMU pour l’exécution des VM
+
+flatpak install flathub org.virt_manager.virt_manager.Extension.Qemu
+
+    💡 Ce module contient virtqemud, virtlogd, virtstoraged et les binaires QEMU nécessaires, exécutés dans le sandbox.
+
+🪄 Forcer la liaison entre les deux composants
+
+Sur certaines installations, Virt-Manager ne détecte pas automatiquement l’extension.
+Dans ce cas :
+
+flatpak override --user \
+  --add-extensions=org.virt_manager.virt_manager.Extension.Qemu=org.virt_manager.virt-manager
+
+Puis relancer :
+
+flatpak run org.virt_manager.virt-manager//stable
+
+🖥️ Création d’une machine virtuelle
+
+    Lancer Virt-Manager :
+
+    flatpak run org.virt_manager.virt-manager//stable
+
+    Créer une connexion utilisateur :
+
+        Type : QEMU/KVM – Session utilisateur
+
+        URI : qemu:///session
+
+    Ajouter un nouvel hôte virtuel → choisir l’image ISO à installer.
+
+⚠️ Problème fréquent : ISO non lisible (/run/user/.../doc/...)
+Symptôme :
+
+    Failed to get "consistent read" lock: Input/output error
+
+Cause :
+
+L’ISO provient d’un disque externe ou d’un sélecteur de fichiers Flatpak → accès indirect via xdg-document-portal.
+Solution :
+
+Copier le fichier ISO dans ton $HOME, puis accorder à Virt-Manager l’accès :
+
+mkdir -p ~/VMs/iso
+cp /media/mon_disque/slitaz.iso ~/VMs/iso/
+flatpak override --user --filesystem=$HOME/VMs org.virt_manager.virt-manager
+
+Relancer Virt-Manager et sélectionner l’ISO depuis ~/VMs/iso.
+🌐 Réseau utilisateur
+
+Le mode “session utilisateur” de QEMU utilise un réseau virtio user-mode NAT intégré.
+Aucune interface virbr0 système n’est nécessaire.
+
+La VM aura accès à Internet, mais ne sera pas directement accessible depuis le réseau local.
+
+    Pour un réseau “bridge” ou “virtio” avancé, il faut passer à une instance qemu:///system (donc installation via rpm-ostree ou Podman).
+
+🧾 Vérifications utiles
+
+Lister les binaires montés dans le sandbox :
+
+flatpak run --command=ls org.virt_manager.virt-manager /app/bin/
+
+Lister les VMs disponibles :
+
+virsh -c qemu:///session list
+
+🧩 Avantages de cette méthode
+Aspect	Description
+🔒 Sécurité	Exécution en sandbox, aucun accès root
+🧱 Atomicité	Système Kinoite immuable, OSTree intact
+🔁 Réversibilité	Pas de modification persistante du système
+🧰 Simplicité	Une seule commande Flatpak pour tout installer
+⚙️ Usage	Suffisant pour tests, bidouilles, développement
+🔗 Référence principale
+
+Source :
+Zihad — Virt-Manager in Fedora Silverblue / Kinoite (2024)
+💬 Notes pratiques
+
+    Le service libvirtd tourne en espace utilisateur, donc aucun systemctl n’est requis.
+
+    Les images de disques sont stockées sous :
+
+~/.local/share/libvirt/images/
+
+Pour effacer proprement toutes les VMs :
+
+    virsh -c qemu:///session undefine --domain <nom_VM> --remove-all-storage
+
+✍️ Auteur : Benoît D.
+🧠 Assistance technique : ChatGPT (GPT-5)
+📅 Mise à jour : Novembre 2025

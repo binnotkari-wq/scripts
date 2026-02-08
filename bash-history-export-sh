@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+HIST="$HOME/.bash_history"
+OUT="$HOME/bash-history.md"
+
+{
+  # en-tête Markdown
+  echo "| Session (début) | Date | Heure | Commande |"
+  echo "|-----------------|------|-------|----------|"
+
+  awk '
+    /^# SESSION/ {
+        split($0, arr, " ")
+        session_ts = arr[3]                      # timestamp UNIX du début de session
+        session = strftime("%Y-%m-%d %H:%M:%S", session_ts)  # format lisible
+        next
+    }
+    /^#/ {
+        ts = substr($0,2)
+        date = strftime("%Y-%m-%d", ts)
+        time = strftime("%H:%M:%S", ts)
+        next
+    }
+    {
+        gsub(/\|/, "\\|", $0)   # échapper les pipes
+        printf "| %s | %s | %s | %s |\n", session, date, time, $0
+    }
+  ' "$HIST"
+
+} > "$OUT"
+
+echo "Export Markdown créé : $OUT"
+flatpak run org.kde.kate ~/bash-history.md
+exit
