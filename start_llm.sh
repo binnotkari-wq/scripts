@@ -4,40 +4,41 @@ MODEL_DIR="/run/media/benoit/1615eb5d-4346-4106-ba33-dbecf0b75b31/local_cache/LL
 
 # 1. Vérifier si llama-server tourne déjà
 if pgrep -x "llama-server" > /dev/null; then
-    # Ici on utilise une simple boîte de message dialog
-    dialog --title "Erreur" --msgbox "Le serveur LLM est déjà en cours d'exécution." 6 40
+    notify-send "LLM" "Le serveur est déjà en cours d'exécution."
     xdg-open http://127.0.0.1:8080/
-    clear
     exit
 fi
 
-# 2. Ouvrir l'explorateur de fichiers ncurses
-# --fselect permet de naviguer dans les dossiers et choisir un fichier
-MODEL_PATH=$(dialog --stdout --title "Sélectionne ton modèle GGUF" \
-    --fselect "$MODEL_DIR/" 10 60)
+# 2. Fonction de sélection de fichier intelligente
+choisir_fichier() {
+    # Détection de l'environnement
+    if [ "$XDG_CURRENT_DESKTOP" = "KDE" ]; then
+        # Version KDE (KDialog)
+        kdialog --getopenfilename "$MODEL_DIR" "*.gguf|Modèles GGUF" --title "Choisir un modèle"
+    elif [ -x "$(command -v zenity)" ]; then
+        # Version GNOME/Universelle (Zenity)
+        zenity --file-selection --filename="$MODEL_DIR/" --file-filter="*.gguf" --title="Choisir un modèle"
+    else
+        # Fallback si rien n'est trouvé (simple lecture de texte)
+        echo "Aucun outil GUI trouvé. Tape le chemin du modèle :" >&2
+        read -r chemin
+        echo "$chemin"
+    fi
+}
 
-# Quitter si l'utilisateur a annulé (touche Échap ou bouton Annuler)
-if [ $? -ne 0 ] || [ -z "$MODEL_PATH" ]; then
-    clear
+# 3. Appel de la fonction
+MODEL_PATH=$(choisir_fichier)
+
+# Quitter si l'utilisateur a annulé
+if [ -z "$MODEL_PATH" ] || [ "$MODEL_PATH" = " " ]; then
     exit
 fi
 
-# Vérifier si c'est bien un fichier et non un dossier
-if [ -d "$MODEL_PATH" ]; then
-    dialog --title "Erreur" --msgbox "Tu as sélectionné un dossier, pas un fichier !" 6 40
-    clear
-    exit
-fi
-
-# 3. Lancement du serveur
+# 4. Lancement du serveur
 MODEL_NAME=$(basename "$MODEL_PATH")
-clear
-echo "Lancement de $MODEL_NAME sur le R5-3600..."
-
 llama-server -m "$MODEL_PATH" -t 4 -c 4096 > "$MODEL_DIR/server.log" 2>&1 &
 
-# 4. Notification finale
+# 5. Notification et ouverture
 sleep 2
-# On repasse sur notify-send pour que tu saches que c'est prêt même si le terminal est réduit
 notify-send "LLM" "Serveur lancé avec : $MODEL_NAME"
 xdg-open http://127.0.0.1:8080/
