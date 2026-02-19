@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ZIM_DIR="/home/benoit/Mes-Donnees/03_Ressources_Externes/Kiwix zims"
+ZIM_DIR="/run/media/benoit/1615eb5d-4346-4106-ba33-dbecf0b75b31/local_cache/Kiwix zims"
 PORT=8080
 
 # On tue proprement l'instance précédente si elle existe
