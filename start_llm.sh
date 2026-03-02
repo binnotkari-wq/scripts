@@ -1,71 +1,73 @@
 #!/usr/bin/env bash
 
-MODEL_DIR="/run/media/benoit/1615eb5d-4346-4106-ba33-dbecf0b75b31/local_cache/LLM"
+DISK_LABEL="CARGO"  # Le nom de ton disque
+RELATIVE_PATH="local_cache/LLM" # L'emplacement des LLM sur ce disque
 
-# 1. Vérifier si llama-server tourne déjà
-if pgrep -x "llama-server" > /dev/null; then
+
+# Trouver le point de montage de ce disque
+# On cherche dans /dev/disk/by-label et on remonte au point de montage réel
+DISK_MOUNT=$(lsblk -no MOUNTPOINT /dev/disk/by-label/$DISK_LABEL)
+
+if [ -z "$DISK_MOUNT" ]; then
+    notify-send "Erreur LLM" "Le disque '$DISK_LABEL' n'est pas branché ou monté."
+    exit 1
+fi
+
+MODEL_DIR="$DISK_MOUNT/$RELATIVE_PATH"
+
+# Contrôle de la présence du dossier des LLM
+if [ ! -d "$MODEL_DIR" ]; then
+    notify-send "Erreur LLM" "Dossier introuvable : $MODEL_DIR"
+    exit 1
+fi
+
+
+# 1. Vérifier si le service tourne déjà
+if systemctl --user is-active --quiet llama-service; then
     notify-send "LLM" "Le serveur est déjà en cours d'exécution."
     xdg-open http://127.0.0.1:8080/
     exit
 fi
 
-# 2. Préparation de la liste pour 'dialog'
-# On récupère tous les fichiers .gguf et on crée une liste formatée pour dialog
+# 2. Préparation de la liste des modèles (.gguf)
 files=($MODEL_DIR/*.gguf)
 options=()
 for i in "${!files[@]}"; do
     options+=("$i" "$(basename "${files[$i]}")")
 done
 
-# 3. Affichage de l'interface de sélection
-# On utilise une redirection de descripteur (3>&1 1>&2 2>&3) pour capturer le choix
+# 3. Sélection du modèle avec Dialog
 CHOICE=$(dialog --backtitle "Gestionnaire LLM - Dell 5485" \
                 --title " Sélection du Modèle " \
                 --clear \
                 --cancel-label "Annuler" \
-                --menu "Choisis le modèle à charger en RAM :" 15 60 10 \
+                --menu "Choisis le modèle à charger :" 15 60 10 \
                 "${options[@]}" \
                 2>&1 >/dev/tty)
 
-# 4. Gestion de l'annulation (Bouton Annuler ou touche Echap)
-exit_status=$?
-if [ $exit_status -ne 0 ] || [ -z "$CHOICE" ]; then
-    clear
-    echo "Opération annulée."
-    sleep 1
-    exit
-fi
+# Gestion de l'annulation
+if [ $? -ne 0 ]; then clear; exit; fi
 
-# 5. Récupération du chemin complet
 MODEL_PATH="${files[$CHOICE]}"
 MODEL_NAME=$(basename "$MODEL_PATH")
 
-# 6. Lancement du serveur (en arrière-plan)
-# llama-server -m "$MODEL_PATH" -t 4 -c 4096 --no-web-sandbox --no-mmap > "$MODEL_DIR/server.log" 2>&1 &
-
-#llama-server -m "$MODEL_PATH" -t 4 -c 4096 --no-mmap > "$MODEL_DIR/server.log" 2>&1 &
-#disown
-
-# 7. Notification et sortie propre du terminal
-#clear
-#echo "🚀 Lancement de $MODEL_NAME..."
-#notify-send "LLM" "Serveur lancé avec : $MODEL_NAME"
-#sleep 2
-#xdg-open http://127.0.0.1:8080/
-#clear
-#exit
+# 4. Lancement via un service éphémère systemd
+# On redirige la sortie vers ton log habituel pour garder une trace
+systemd-run --user --unit=llama-service --description="Serveur Llama CPP" \
+    bash -c "llama-server -m '$MODEL_PATH' -t 4 -c 4096 --no-mmap > '$MODEL_DIR/server.log' 2>&1"
 
 
-# 6. Lancement du serveur
-# On utilise 'setsid' pour créer une session totalement indépendante du terminal
-# On redirige TOUT vers le log avec &> pour être sûr que rien ne remonte à l'écran
-setsid llama-server -m "$MODEL_PATH" -t 4 -c 4096 --no-mmap &> "$MODEL_DIR/server.log" &
-
-# 7. Notification et sortie
-# On ne met pas de sleep trop long pour ne pas bloquer
-notify-send "LLM" "Serveur lancé : $MODEL_NAME"
-xdg-open http://127.0.0.1:8080/
-
-# On vide l'écran une dernière fois et on quitte
+# 5. Ouverture du navigateur et stabilisation
 clear
+echo "🚀 Le service llama-service est lancé."
+echo "Appel de Firefox..."
+
+# On utilise une redirection pour éviter de voir l'erreur EPERM de Firefox dans le terminal
+xdg-open http://127.0.0.1:8080/ > /dev/null 2>&1
+
+# On laisse 1 seconde de répit pour que la commande soit transmise au navigateur
+sleep 1
+
+echo "C'est prêt ! Ce terminal va se fermer."
+sleep 1
 exit
