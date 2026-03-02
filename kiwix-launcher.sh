@@ -1,7 +1,25 @@
 #!/usr/bin/env bash
 
-ZIM_DIR="/run/media/benoit/1615eb5d-4346-4106-ba33-dbecf0b75b31/local_cache/Kiwix zims"
+DISK_LABEL="CARGO"  # Le nom de ton disque
+RELATIVE_PATH="local_cache/Kiwix zims" # L'emplacement des LLM sur ce disque
 PORT=8081
+
+# Trouver le point de montage de ce disque
+# On cherche dans /dev/disk/by-label et on remonte au point de montage réel
+DISK_MOUNT=$(lsblk -no MOUNTPOINT /dev/disk/by-label/$DISK_LABEL)
+
+if [ -z "$DISK_MOUNT" ]; then
+    notify-send "Erreur LLM" "Le disque '$DISK_LABEL' n'est pas branché ou monté."
+    exit 1
+fi
+
+ZIM_DIR="$DISK_MOUNT/$RELATIVE_PATH"
+
+# Contrôle de la présence du dossier des LLM
+if [ ! -d "$ZIM_DIR" ]; then
+    notify-send "Erreur Zim" "Dossier introuvable : $ZIM_DIR"
+    exit 1
+fi
 
 # On tue proprement l'instance précédente si elle existe
 pkill kiwix-serve 2>/dev/null
@@ -10,8 +28,7 @@ pkill kiwix-serve 2>/dev/null
 kiwix-serve --port 8081 "$ZIM_DIR"/*.zim &
 
 # Attente très courte (le binaire local est quasi instantané)
-sleep 0.5
+sleep 2
 
 # Lancement de Firefox
-# firefox "http://localhost:$PORT" &
 xdg-open "http://localhost:$PORT" &
