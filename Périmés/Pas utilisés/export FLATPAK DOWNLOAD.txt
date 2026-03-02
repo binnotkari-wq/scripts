@@ -1,0 +1,2 @@
+
+export FLATPAK_DOWNLOAD_TMPDIR="$HOME/.flatpak-tmp" # Redirection des fichiers temporaires Flatpak vers le Home
