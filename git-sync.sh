@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 PARENT_DIR="$HOME/Mes-Donnees/Git"
-REPOS=("archives" "home-manager" "info_doc" "user-deploy" "nixos-dotfiles" "nixos-install_script" "atomic-install_script" "scripts" "user-dotfiles")
+REPOS=("archives" "home-manager" "info_doc" "user-deploy" "nixos-dotfiles" "nixos-install_script" "atomic-install_script" "scripts" "user-dotfiles" "install-script")
 HOST=$(hostname)
 
 echo "--- Début de la synchronisation sur [$HOST] : $(date) ---"
