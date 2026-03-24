@@ -15,7 +15,7 @@ HOME_DIR="/home/benoit"
 SAVE_DIR="/run/media/benoit/Stockage"
 USER_DIR="Mes-Donnees"
 DATE=$(date +'%Y%m%d_%H%M%S')
-DEPRECATED_DIR="$SAVE_DIR/Dépréciés_$DATE"
+DEPRECATED_DIR="$SAVE_DIR/Dépréciés/$DATE"
 LOG_DIR="$SAVE_DIR/logs"
 LOG_FILE="$LOG_DIR/sauvegarde_$DATE.log"
 
@@ -38,7 +38,6 @@ read -p "Procéder à la sauvegarde? (o/n) " choice
 echo "========================================================="
 case $choice in
 	[Oo]* ) rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$HOME_DIR/$USER_DIR/03_Ressources_Externes/Fiches vie pratique/" "$SAVE_DIR/$USER_DIR/03_Ressources_Externes/Fiches vie pratique" | tee -a "$LOG_FILE" &&
-		rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$HOME_DIR/$USER_DIR/03_Ressources_Externes/Kiwix zims/" "$SAVE_DIR/$USER_DIR/03_Ressources_Externes/Kiwix zims" | tee -a "$LOG_FILE" &&
 		rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$HOME_DIR/$USER_DIR/03_Ressources_Externes/Utilisation du système/" "$SAVE_DIR/$USER_DIR/03_Ressources_Externes/Utilisation du système" | tee -a "$LOG_FILE" &&
 		rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$HOME_DIR/$USER_DIR/03_Ressources_Externes/Musique/00 vrac/" "$SAVE_DIR/$USER_DIR/03_Ressources_Externes/Musique/00 vrac" | tee -a "$LOG_FILE" &&
 		rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$HOME_DIR/$USER_DIR/05_En_Cours/" "$SAVE_DIR/$USER_DIR/05_En_Cours" | tee -a "$LOG_FILE" &&
