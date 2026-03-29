@@ -31,7 +31,7 @@ sauvegarder_pc-dossiers-de-travail-seulement_vers_stockage() {
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/03_Ressources_Externes/" "$DESTINATION/Mes-Donnees/03_Ressources_Externes" | tee -a "$LOG_FILE" &&
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/05_En_Cours/" "$DESTINATION/Mes-Donnees/05_En_Cours" | tee -a "$LOG_FILE" &&
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/99_Technique/" "$DESTINATION/Mes-Donnees/99_Technique" | tee -a "$LOG_FILE" &&
-  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Git/" "$DESTINATION/Mes-Donnees/Git" | tee -a "$LOG_FILE";;
+  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Git/" "$DESTINATION/Mes-Donnees/Git" | tee -a "$LOG_FILE"
 }
 
 restaurer_stockage_dossiers-de-travail-seulement_vers_pc() {
@@ -43,7 +43,7 @@ restaurer_stockage_dossiers-de-travail-seulement_vers_pc() {
   rsync -avh "$DESTINATION/Mes-Donnees/03_Ressources_Externes" "$SOURCE/03_Ressources_Externes/" &&
   rsync -avh "$DESTINATION/Mes-Donnees/05_En_Cours" "$SOURCE/05_En_Cours/" &&
   rsync -avh "$DESTINATION/Mes-Donnees/99_Technique" "$SOURCE/99_Technique/" &&
-  rsync -avh "$DESTINATION/Mes-Donnees/Git" "$SOURCE/Git/";;
+  rsync -avh "$DESTINATION/Mes-Donnees/Git" "$SOURCE/Git/"
 }
 
 sauvegarder_additive_telephone_vers_backup() {
@@ -68,7 +68,7 @@ sauvegarder_additive_telephone_vers_backup() {
   rsync -avh --progress --size-only "$SOURCE/emulated/0/MIUI/sound_recorder/" "$DESTINATION/Mes-Donnees/01_Souvenirs/Dictaphone/" &&
   rsync -avh --progress --size-only "$SOURCE/emulated/0/Movies/Whatsapp/" "$DESTINATION/Mes-Donnees/01_Souvenirs/WhatsApp/Media/WhatsApp Video" &&
   rsync -avh --progress --size-only "$SOURCE/emulated/0/Pictures" "$DESTINATION/Mes-Donnees/01_Souvenirs/Photos/" &&
-  rsync -avh --progress --size-only "$SOURCE/emulated/0/Android/media/com.whatsapp/WhatsApp/" "$DESTINATION/Mes-Donnees/01_Souvenirs/WhatsApp/";;
+  rsync -avh --progress --size-only "$SOURCE/emulated/0/Android/media/com.whatsapp/WhatsApp/" "$DESTINATION/Mes-Donnees/01_Souvenirs/WhatsApp/"
 }
 
 # ========================================================
@@ -77,6 +77,8 @@ sauvegarder_additive_telephone_vers_backup() {
 
 
 choisir_type_sauvegarde () {
+# à faire
+echo "à faire"
 }
 
 
@@ -145,7 +147,7 @@ detecter_et_choisir_disque_destination() {
 
 ecrire_conclusion_dans_log() {
   echo "" | tee -a "$LOG_FILE" &&
-  echo "✅ Sauvegarde effectuée le $(date)" | tee -a "$LOG_FILE";;
+  echo "✅ Sauvegarde effectuée le $(date)" | tee -a "$LOG_FILE"
 }
 
 
