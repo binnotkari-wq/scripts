@@ -22,12 +22,13 @@ if [ ! -d "$MODEL_DIR" ]; then
 fi
 
 
-# 1. Vérifier si le service tourne déjà
-if systemctl --user is-active --quiet llama-service; then
+# 1. Vérifier si llama-server tourne déjà
+if pgrep -x "llama-server" > /dev/null; then
     notify-send "LLM" "Le serveur est déjà en cours d'exécution."
     xdg-open http://127.0.0.1:8080/
     exit
 fi
+
 
 # 2. Préparation de la liste des modèles (.gguf)
 files=($MODEL_DIR/*.gguf)
@@ -51,11 +52,14 @@ if [ $? -ne 0 ]; then clear; exit; fi
 MODEL_PATH="${files[$CHOICE]}"
 MODEL_NAME=$(basename "$MODEL_PATH")
 
-# 4. Lancement via un service éphémère systemd
-# On redirige la sortie vers ton log habituel pour garder une trace
-systemd-run --user --unit=llama-service --description="Serveur Llama CPP" \
-    bash -c "llama-server -m $MODEL_PATH -t 4 -c 4096 --no-mmap #> $MODEL_DIR/server.log 2>&1"
 
+
+echo $MODEL_PATH
+echo $MODEL_NAME
+echo $MODEL_DIR
+echo "llama-server -m '$MODEL_PATH' -t 4 -c 4096 --no-mmap > /dev/null 2>&1"
+llama-server -m $MODEL_PATH -t 4 -c 4096 --no-mmap
+# llama-server -m '/var/mnt/1615eb5d-4346-4106-ba33-dbecf0b75b31/local_cache/LLM/gemma-3-4b-it-Q8_0.gguf' -t 4 -c 4096 --no-mmap > '/var/mnt/1615eb5d-4346-4106-ba33-dbecf0b75b31/local_cache/LLM/server.log' 2>&1
 
 # 5. Ouverture du navigateur et stabilisation
 #clear
@@ -69,5 +73,5 @@ xdg-open http://127.0.0.1:8080/ > /dev/null 2>&1
 sleep 1
 
 echo "C'est prêt ! Ce terminal va se fermer."
-sleep 10
-# exit
+sleep 1
+exit
