@@ -153,22 +153,26 @@ ecrire_conclusion_dans_log() {
 
 
 # systematique
-choisir_type_sauvegarde
+# choisir_type_sauvegarde
+# detecter_et_choisir_disque_source
+detecter_et_choisir_disque_destination
 definir_variables_communes
 
 # si on veut cloner deux disques de sauvegarde :
-detecter_et_choisir_disque_source
-detecter_et_choisir_disque_destination
-annoncer_operation
-cloner_entre_disques_sauvegarde
+# detecter_et_choisir_disque_source
+# detecter_et_choisir_disque_destination
+# annoncer_operation
+# cloner_entre_disques_sauvegarde
 
 # si on veut sauvegarder le contenu du pc :
+SOURCE="/home/benoit/Mes-Donnees" # par défaut
 annoncer_operation
-sauvegarder_miroir_pc_vers_stockage
+cloner_pc_vers_stockage
+# sauvegarder_miroir_pc_vers_stockage
 
 # si sauvegarde telephone :
-annoncer_operation
-sauvegarder_additive_telephone_vers_backup
+# annoncer_operation
+# sauvegarder_additive_telephone_vers_backup
 
 # systematique
 ecrire_conclusion_dans_log
