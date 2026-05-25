@@ -30,5 +30,6 @@ OUT="$HOME/bash-history.md"
 } > "$OUT"
 
 echo "Export Markdown créé : $OUT"
-flatpak run org.kde.kate ~/bash-history.md
+# flatpak run org.kde.kate ~/bash-history.md
+mdcat ~/bash-history.md
 exit
