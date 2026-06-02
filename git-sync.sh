@@ -92,7 +92,7 @@ REPOS=(
   "archives"
   "atomic-install_script"
   "home-manager"
-  "info_doc"
+  # "info_doc"
   "nixos-dotfiles"
   "nixos-install_script"
   "pastebin"
