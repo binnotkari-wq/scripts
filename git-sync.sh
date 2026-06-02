@@ -98,7 +98,7 @@ REPOS=(
   "pastebin"
   "scripts"
   "user-deploy"
-  "user-dotfiles"
+  # "user-dotfiles"
   "mini-projects"
   )
 }
