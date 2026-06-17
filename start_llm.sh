@@ -37,7 +37,7 @@ for i in "${!files[@]}"; do
 done
 
 # 3. Sélection du modèle avec Dialog
-CHOICE=$(dialog --backtitle "Gestionnaire LLM - Dell 5485" \
+CHOICE=$(dialog --backtitle "Gestionnaire LLM" \
                 --title " Sélection du Modèle " \
                 --clear \
                 --cancel-label "Annuler" \
