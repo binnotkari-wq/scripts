@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DISK_LABEL="CARGO"  # Le nom de ton disque
+DISK_LABEL="cargo"  # Le nom de ton disque
 RELATIVE_PATH="local_cache/LLM" # L'emplacement des LLM sur ce disque
 
 
