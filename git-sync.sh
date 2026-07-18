@@ -53,45 +53,47 @@ REPOS=(
   "archives"
   "atomic-install_script"
   "home-manager"
-  # "info_doc"
+  "info_doc"
   "nixos-dotfiles"
   "nixos-install_script"
   "pastebin"
   "scripts"
   "user-deploy"
-  # "user-dotfiles"
+  "user-dotfiles"
   "mini-projects"
   )
 }
 
 synchroniser_repos() {
-HOST=$(hostname)
-echo "--- Début de la synchronisation sur [$HOST] : $(date) ---"
+  HOST=$(hostname)
+  echo "--- Début de la synchronisation sur [$HOST] : $(date) ---"
 
-for repo in "${REPOS[@]}"; do
+  for repo in "${REPOS[@]}"; do
     TARGET="$MY_GIT_DIR/$repo"
     if [ -d "$TARGET" ]; then
-        echo "🔄 $repo : Mise à jour..."
-        # Utilisation de -C pour être indépendant du dossier actuel
-        git -C "$TARGET" pull
-        cd "$TARGET" || continue
-        git fetch origin
+      echo "🔄 $repo : Mise à jour..."
+      cd "$TARGET" || continue
 
-        if [[ -n $(git status --porcelain) ]]; then
-            git add .
-            # Commit avec le nom de la machine
-            git commit -m "Auto-sync [$HOST] : $(date '+%Y-%m-%d %H:%M:%S')"
-        fi
+      BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-        git push origin "$(git rev-parse --abbrev-ref HEAD) 2>/dev/null"
-        git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)"
+      # On récupère l'état distant sans fusionner
+      git fetch origin
+
+      # S'il y a des changements locaux, on les commit
+      if [[ -n $(git status --porcelain) ]]; then
+        git add .
+        git commit -m "Auto-sync [$HOST] : $(date '+%Y-%m-%d %H:%M:%S')"
+      fi
+
+      # On rebase sur la version distante puis on pousse
+      git pull --rebase origin "$BRANCH"
+      git push origin "$BRANCH"
     else
-        echo "🚀 $repo : Clonage..."
-        git clone "https://github.com/binnotkari-wq/$repo.git" "$TARGET"
+      echo "🚀 $repo : Clonage..."
+      git clone "https://github.com/binnotkari-wq/$repo.git" "$TARGET"
     fi
-done
+  done
 }
-
 
 # =============================================================================
 # EXECUTION
