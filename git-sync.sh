@@ -53,13 +53,11 @@ REPOS=(
   "archives"
   "atomic-install_script"
   "home-manager"
-  "info_doc"
   "nixos-dotfiles"
   "nixos-install_script"
   "pastebin"
   "scripts"
   "user-deploy"
-  "user-dotfiles"
   "mini-projects"
   )
 }
