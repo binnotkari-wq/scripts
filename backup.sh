@@ -27,23 +27,23 @@ sauvegarder_pc-dossiers-de-travail-seulement_vers_stockage() {
   echo "Il s'agit d'une sauvegarde décrémentielle des dossiers du PC vers le disque de stockage :"
   echo "- La destination est un copie miroir de la source, uniquement pour les dossiers de travail (pc mobile, qui ne contient pas de documents personnels)"
   echo "- Ajoute les nouveau fichiers, et déplace les fichiers dépréciés (pour archivage)"
-  SOURCE="/home/benoit/Mes-Donnees"
-  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/03_Ressources_Externes/" "$DESTINATION/Mes-Donnees/03_Ressources_Externes" | tee -a "$LOG_FILE" &&
-  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/05_En_Cours/" "$DESTINATION/Mes-Donnees/05_En_Cours" | tee -a "$LOG_FILE" &&
-  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/99_Technique/" "$DESTINATION/Mes-Donnees/99_Technique" | tee -a "$LOG_FILE" &&
-  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Git/" "$DESTINATION/Mes-Donnees/Git" | tee -a "$LOG_FILE"
+  SOURCE="/home/benoit"
+  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Mes-Donnees/03_Ressources_Externes/" "$DESTINATION/Mes-Donnees/03_Ressources_Externes" | tee -a "$LOG_FILE" &&
+  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Mes-Donnees/05_En_Cours/" "$DESTINATION/Mes-Donnees/05_En_Cours" | tee -a "$LOG_FILE" &&
+  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Mes-Donnees/99_Technique/" "$DESTINATION/Mes-Donnees/99_Technique" | tee -a "$LOG_FILE" &&
+  rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Git/" "$DESTINATION/Git" | tee -a "$LOG_FILE"
 }
 
 restaurer_stockage_dossiers-de-travail-seulement_vers_pc() {
-  SOURCE="/home/benoit/Mes-Donnees"
-  mkdir -p "$SOURCE/03_Ressources_Externes" &&
-  mkdir -p "$SOURCE/05_En_Cours" &&
-  mkdir -p "$SOURCE/99_Technique" &&
+  SOURCE="/home/benoit"
+  mkdir -p "$SOURCE/Mes-Donnees/03_Ressources_Externes" &&
+  mkdir -p "$SOURCE/Mes-Donnees/05_En_Cours" &&
+  mkdir -p "$SOURCE/Mes-Donnees/99_Technique" &&
   mkdir -p "$SOURCE/Git" &&
-  rsync -avh "$DESTINATION/Mes-Donnees/03_Ressources_Externes" "$SOURCE/03_Ressources_Externes/" &&
-  rsync -avh "$DESTINATION/Mes-Donnees/05_En_Cours" "$SOURCE/05_En_Cours/" &&
-  rsync -avh "$DESTINATION/Mes-Donnees/99_Technique" "$SOURCE/99_Technique/" &&
-  rsync -avh "$DESTINATION/Mes-Donnees/Git" "$SOURCE/Git/"
+  rsync -avh "$DESTINATION/Mes-Donnees/03_Ressources_Externes" "$SOURCE/Mes-Donnees/03_Ressources_Externes/" &&
+  rsync -avh "$DESTINATION/Mes-Donnees/05_En_Cours" "$SOURCE/Mes-Donnees/05_En_Cours/" &&
+  rsync -avh "$DESTINATION/Mes-Donnees/99_Technique" "$SOURCE/Mes-Donnees/99_Technique/" &&
+  rsync -avh "$DESTINATION/Git" "$SOURCE/Git/"
 }
 
 sauvegarder_additive_telephone_vers_backup() {

@@ -9,12 +9,6 @@ executer_logique() {
     echo "Authentification git déjà enregistrée"
   fi
 
-  if [[ ! -f ""$SERVICE_FILE"" ]]; then
-  setup_sync_service
-  else
-    echo "Service de synchronisation déjà installé"
-  fi
-
   definir_repos
   synchroniser_repos
 
@@ -31,11 +25,9 @@ definir_variables() {
   # 0. Détection de l'utilisateur et du HOME (robuste pour NixOS/Silverblue)
   USER_NAME=$(whoami)
   USER_HOME=$HOME
-  MY_GIT_DIR="$USER_HOME/Mes-Donnees/Git"
-  SERVICE_DIR="$USER_HOME/.config/systemd/user"
-  SERVICE_FILE="$SERVICE_DIR/git-sync-on-shutdown.service"
+  MY_GIT_DIR="$USER_HOME/Git"
   echo "🛡️ Mise en place de Git pour $USER_NAME"
-  mkdir -p $MY_GIT_DIR
+  mkdir -p "$MY_GIT_DIR"
 }
 
 setup_git_credentials() {
@@ -45,7 +37,7 @@ setup_git_credentials() {
   git config --global credential.helper store
 
   # Sécurité pour éviter les erreurs de "dossier non sûr" sur NixOS
-  git config --global --add safe.directory "$USER_HOME/Mes-Donnees/Git/*"
+  git config --global --add safe.directory "$USER_HOME/Git/*"
 
   git config --global init.defaultBranch main
 
@@ -54,37 +46,6 @@ setup_git_credentials() {
       chmod 600 "$USER_HOME/.git-credentials"
       echo "✅ Token GitHub pré-enregistré."
   fi
-}
-
-setup_sync_service() {
-  echo "⚙️ Configuration du service systemd..."
-  mkdir -p "$SERVICE_DIR"
-
-  # On trouve le chemin de 'true' de façon dynamique pour NixOS/Silverblue
-  TRUE_PATH=$(command -v true)
-
-  cat <<EOF > "$SERVICE_FILE"
-[Unit]
-Description=Synchronisation Git des dépôts à la fermeture de session
-After=network.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=$TRUE_PATH
-# On injecte le chemin complet calculé pour éviter les problèmes de variables
-ExecStop=$USER_HOME/Mes-Donnees/Git/user-deploy/modules/git-sync.sh
-
-[Install]
-WantedBy=default.target
-EOF
-
-  systemctl --user daemon-reload
-  systemctl --user enable git-sync-on-shutdown.service
-
-  # Linger est crucial pour que les services --user tournent au shutdown sur Silverblue
-  loginctl enable-linger "$USER_NAME"
-  echo "✅ Service systemd configuré."
 }
 
 definir_repos () {
@@ -122,8 +83,8 @@ for repo in "${REPOS[@]}"; do
             git commit -m "Auto-sync [$HOST] : $(date '+%Y-%m-%d %H:%M:%S')"
         fi
 
-        git push origin $(git rev-parse --abbrev-ref HEAD) 2>/dev/null
-        git pull --rebase origin $(git rev-parse --abbrev-ref HEAD)
+        git push origin "$(git rev-parse --abbrev-ref HEAD) 2>/dev/null"
+        git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)"
     else
         echo "🚀 $repo : Clonage..."
         git clone "https://github.com/binnotkari-wq/$repo.git" "$TARGET"
