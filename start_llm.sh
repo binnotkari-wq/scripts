@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 
-DISK_LABEL="cargo"  # Le nom de ton disque
+LABEL="cargo"  # Le nom de ton disque
 RELATIVE_PATH="local_cache/LLM" # L'emplacement des LLM sur ce disque
 
-
+##########################################################################################
+# Méthode qui n'est plus utilisée.                                                       #
+##########################################################################################
 # Trouver le point de montage de ce disque
 # On cherche dans /dev/disk/by-label et on remonte au point de montage réel
-DISK_MOUNT=$(lsblk -no MOUNTPOINT /dev/disk/by-label/$DISK_LABEL)
+# DISK_MOUNT=$(lsblk -no MOUNTPOINT /dev/disk/by-label/$DISK_LABEL)
 
-if [ -z "$DISK_MOUNT" ]; then
-    notify-send "Erreur LLM" "Le disque '$DISK_LABEL' n'est pas branché ou monté."
-    exit 1
-fi
+# if [ -z "$DISK_MOUNT" ]; then
+#     notify-send "Erreur LLM" "Le disque '$DISK_LABEL' n'est pas branché ou monté."
+#     exit 1
+# fi
 
-MODEL_DIR="$DISK_MOUNT/$RELATIVE_PATH"
+##########################################################################################
+# Desormais on part du principe que le volume (disque ou partition) est monté sur /cargo #
+##########################################################################################
+MODEL_DIR="/$LABEL/$RELATIVE_PATH"
 
 # Contrôle de la présence du dossier des LLM
 if [ ! -d "$MODEL_DIR" ]; then
