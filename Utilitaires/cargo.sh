@@ -96,3 +96,5 @@ provisionner_cargo() {
         echo "✓ iFixit déjà présent, téléchargement ignoré."
     fi
 }
+
+provisionner_cargo
