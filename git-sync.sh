@@ -58,6 +58,7 @@ REPOS=(
   "pastebin"
   "scripts"
   "user-deploy"
+  "ublue-bootc"
   "mini-projects"
   )
 }
