@@ -13,30 +13,168 @@ set -euo pipefail
 #  Devra être déclare dans les .nix pour être monté au prochain démarrage.
 # ═══════════════════════════════════════════════════════════════════════════
 creer_cargo() {
-    OPTS="noatime,compress=zstd,space_cache=v2,ssd,discard=async"
-    ROOT_FSTYPE=$(findmnt -no FSTYPE /nix)  # on regarde quel est le système de fichier principal (celui sur lequel est /nix dans le cas d'un volume btrfs)
-    ROOT_DEVICE=$(findmnt -no SOURCE /nix | sed 's/\[.*//') # on extrait le device
-    TMP_MOUNT=$(mktemp -d)
+#!/usr/bin/env bash
+# setup_cargo.sh
+#
+# Sonde l'existence d'un volume "cargo" (sous-volume btrfs ou disque étiqueté),
+# le crée si besoin, génère modules/cargo.nix en conséquence, l'ajoute aux
+# imports du host courant, puis rebuild switch.
+#
+# Prérequis : exécuté en root, sur un NixOS installé et en cours d'utilisation.
+# Le fichier cargo.nix généré est propre à la machine (voir .gitignore du dépôt).
+
+set -euo pipefail
+
+# --- Paramètres ------------------------------------------------------------
+
+NIXOS_USER="${SUDO_USER:-$USER}"
+HOSTNAME_SHORT=$(hostname -s)
+DOTFILES_DIR="/home/${NIXOS_USER}/Git/nixos-dotfiles"
+MODULES_DIR="${DOTFILES_DIR}/modules"
+HOST_FILE="${DOTFILES_DIR}/hosts/${HOSTNAME_SHORT}.nix"
+CARGO_NIX="${MODULES_DIR}/cargo.nix"
+
+if [[ $EUID -ne 0 ]]; then
+    echo "⚠ Ce script doit être exécuté en root (sudo)." >&2
+    exit 1
+fi
+
+if [[ ! -f "$HOST_FILE" ]]; then
+    echo "⚠ Fichier host introuvable : $HOST_FILE" >&2
+    echo "  (vérifie que le hostname (${HOSTNAME_SHORT}) correspond bien à un fichier dans hosts/)" >&2
+    exit 1
+fi
+
+if [[ ! -d "$MODULES_DIR" ]]; then
+    echo "⚠ Dossier modules introuvable : $MODULES_DIR" >&2
+    exit 1
+fi
+
+# --- Étape 1 : disque étiqueté "cargo" ? -----------------------------------
+
+echo "== Étape 1 : recherche d'un disque étiqueté 'cargo' =="
+CARGO_DISK=$(blkid -L cargo 2>/dev/null || true)
+
+CARGO_MODE=""       # "disk" ou "subvolume"
+CARGO_DEVICE=""      # utilisé uniquement en mode "subvolume"
+
+if [[ -n "$CARGO_DISK" ]]; then
+    echo "✓ Disque 'cargo' trouvé : $CARGO_DISK"
+    CARGO_MODE="disk"
+else
+    echo "  Aucun disque étiqueté 'cargo'."
+
+    # --- Étape 2 : sous-volume btrfs "cargo" ? -----------------------------
+
+    echo "== Étape 2 : recherche d'un sous-volume btrfs 'cargo' =="
+
+    # On regarde quel est le système de fichier principal (celui sur lequel
+    # est /nix), car / peut être un tmpfs en impermanence.
+    ROOT_FSTYPE=$(findmnt -no FSTYPE /nix)
+    ROOT_DEVICE=$(findmnt -no SOURCE /nix | sed 's/\[.*//')
 
     if [[ "$ROOT_FSTYPE" != "btrfs" ]]; then
-        echo "⚠ Le système de fichiers racine n'est pas btrfs ($ROOT_FSTYPE détecté). Abandon."
-    else
-        # On monte le volume btrfs à son niveau racine absolu (subvolid=5), seul
-        # niveau depuis lequel on peut créer un sous-volume au même rang que
-        # $ROOT_SUBVOLUME, home, nix, persist, etc.
-        mount -o subvolid=5 "$ROOT_DEVICE" "$TMP_MOUNT"
-
-        CARGO_EXISTS=$(btrfs subvolume list "$TMP_MOUNT" | awk '{print $NF}' | grep -xF "cargo" || true)
-        if [[ -n "$CARGO_EXISTS" ]]; then
-            echo "✓ Le sous-volume 'cargo' existe déjà, aucune action nécessaire."
-        else
-            btrfs subvolume create "$TMP_MOUNT/cargo"
-            echo "✓ Sous-volume 'cargo' créé."
-        fi
-        umount "$TMP_MOUNT"
-        rmdir "$TMP_MOUNT" 2>/dev/null || true
-    mount -o "$OPTS,subvol=cargo"  "$ROOT_DEVICE" /cargo
+        echo "⚠ Le système de fichiers racine n'est pas btrfs (${ROOT_FSTYPE} détecté). Abandon."
+        exit 1
     fi
+
+    TMP_MOUNT=$(mktemp -d)
+
+    # On monte le volume btrfs à son niveau racine absolu (subvolid=5), seul
+    # niveau depuis lequel on peut créer un sous-volume au même rang que
+    # $ROOT_SUBVOLUME, home, nix, persist, etc.
+    mount -o subvolid=5 "$ROOT_DEVICE" "$TMP_MOUNT"
+
+    CARGO_EXISTS=$(btrfs subvolume list "$TMP_MOUNT" | awk '{print $NF}' | grep -xF "cargo" || true)
+
+    if [[ -n "$CARGO_EXISTS" ]]; then
+        echo "✓ Le sous-volume 'cargo' existe déjà."
+    else
+        btrfs subvolume create "$TMP_MOUNT/cargo"
+        echo "✓ Sous-volume 'cargo' créé (top level 5)."
+    fi
+
+    umount "$TMP_MOUNT"
+    rmdir "$TMP_MOUNT" 2>/dev/null || true
+
+    CARGO_MODE="subvolume"
+    CARGO_DEVICE="$ROOT_DEVICE"
+fi
+
+# --- Étape 3 : génération de modules/cargo.nix ------------------------------
+
+echo "== Étape 3 : génération de ${CARGO_NIX} =="
+
+if [[ "$CARGO_MODE" == "disk" ]]; then
+    cat > "$CARGO_NIX" <<'EOF'
+# Fichier généré automatiquement par setup_cargo.sh — propre à cette machine,
+# ne pas versionner (voir .gitignore du dépôt).
+{ config, pkgs, ... }:
+{
+  fileSystems."/cargo" =
+    { device = "/dev/disk/by-label/cargo";
+      fsType = "btrfs";
+      # nofail = le système boote même si le disque est absent
+      options = [ "nofail" "noatime" "compress=zstd" "ssd" "discard=async" ];
+    };
+}
+EOF
+else
+    cat > "$CARGO_NIX" <<EOF
+# Fichier généré automatiquement par setup_cargo.sh — propre à cette machine,
+# ne pas versionner (voir .gitignore du dépôt).
+# Device codé en dur (plutôt que via vars.luksUuid) pour ne pas dépendre de
+# variables.nix dans un fichier qui n'existe que localement.
+{ config, pkgs, ... }:
+{
+  fileSystems."/cargo" =
+    { device = "${CARGO_DEVICE}";
+      fsType = "btrfs";
+      options = [ "subvol=cargo" "noatime" "compress=zstd" "ssd" "discard=async" ];
+    };
+}
+EOF
+fi
+
+echo "✓ ${CARGO_NIX} généré (mode : ${CARGO_MODE})."
+
+# --- Étape 4 : ajout de l'import dans le host --------------------------------
+
+echo "== Étape 4 : ajout de l'import dans ${HOST_FILE} =="
+
+if grep -q '\.\./modules/cargo\.nix' "$HOST_FILE"; then
+    echo "  Import déjà présent, rien à faire."
+else
+    # On repère la ligne "imports = ..." puis on insère juste après le
+    # premier "[" rencontré à partir de là (que ce soit sur la même ligne
+    # ou une ligne suivante).
+    awk '
+        { print }
+        /imports[[:space:]]*=/ { in_imports=1 }
+        in_imports && /\[/ && !inserted {
+            print "      ../modules/cargo.nix"
+            inserted=1
+        }
+    ' "$HOST_FILE" > "${HOST_FILE}.tmp"
+
+    if ! grep -q '\.\./modules/cargo\.nix' "${HOST_FILE}.tmp"; then
+        echo "⚠ Impossible de localiser le bloc 'imports = [ ... ]' dans ${HOST_FILE}." >&2
+        echo "  Ajoute ../modules/cargo.nix manuellement, puis relance le rebuild." >&2
+        rm -f "${HOST_FILE}.tmp"
+    else
+        mv "${HOST_FILE}.tmp" "$HOST_FILE"
+        echo "✓ Import ajouté en tête de liste."
+    fi
+fi
+
+# --- Étape 5 : rebuild switch ------------------------------------------------
+
+echo "== Étape 5 : nixos-rebuild switch =="
+nixos-rebuild switch
+
+echo
+echo "✓ Terminé."
+findmnt /cargo || echo "⚠ /cargo n'apparaît pas monté, vérifie la config."
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
