@@ -72,7 +72,7 @@ else
     echo "== Étape 2 : recherche d'un sous-volume btrfs 'cargo' =="
 
     # On regarde quel est le système de fichier principal (celui sur lequel
-    # est /nix), car / peut être un tmpfs en impermanence.
+    # est /nix), car / pourrait être un tmpfs en impermanence.
     ROOT_FSTYPE=$(findmnt -no FSTYPE /nix)
     ROOT_DEVICE=$(findmnt -no SOURCE /nix | sed 's/\[.*//')
 
@@ -175,6 +175,9 @@ fi
 echo "== Étape 5 : nixos-rebuild switch =="
 nixos-rebuild switch
 
+# L e script ayant été exécuté avec sudo : correction des permissions 
+chown -R "1000:1000" /home/${NIXOS_USER}/Git/nixos-dotfiles
+chown -R "1000:1000" /cargo
 echo
 echo "✓ Terminé."
 findmnt /cargo || echo "⚠ /cargo n'apparaît pas monté, vérifie la config."
@@ -188,17 +191,6 @@ provisionner_cargo() {
     echo "════════════════════════════════════════════════"
     read -rp "Prêt à télécharger LLM et .zim ? (oui) : " CONFIRM
     [[ "$CONFIRM" == "oui" ]] || { echo "Annulé."; return 0; }
-
-    # Récupérer le propriétaire actuel de /cargo
-    current_owner_uid=$(stat -c '%u' /cargo)
-    # Récupérer l'utilisateur actuel
-    current_user_uid=$(id -u)
-
-    # Si le propriétaire n'est pas l'utilisateur actuel, on corrige
-    if [ "$current_owner_uid" != "$current_user_uid" ]; then
-        echo "Le propriétaire de /cargo n'est pas $(whoami). Correction..."
-        sudo chown -R "$(id -u):$(id -g)" /cargo
-    fi
 
     # ─── 1. Téléchargement des LLM ────────────────────────────────────────
     echo "Installation de aria2..."
