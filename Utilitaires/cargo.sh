@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 
 ##################################################################################################
-# cargo.sh — provisiont d'un dataset essentiel sur le sous-volume, ou disque, monté sur /cargo   #
-# Usage : ./cargo.sh                                                                             #
+# Usage : chmod +x cargo.sh && sudo ./cargo.sh                                                   #
+# Provision d'un dataset essentiel sur le sous-volume, ou disque monté sur /cargo                #
 ##################################################################################################
+
+###############################################################################################
+#  CONTEXTE D'EXECUTION                                                                       #
+###############################################################################################
 
 set -euo pipefail
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  CREATION DU SOUS-VOLUME BTRFS CARGO (SPECIFIQUE DEPLOIEMENT PAR REBUILD)
-#  s'il n'exite pas encore physiquement sur le disque.
-#  Devra être déclare dans les .nix pour être monté au prochain démarrage.
-# ═══════════════════════════════════════════════════════════════════════════
+# Vérification des droits
+if [[ $EUID -ne 0 ]]; then
+    echo "Ce script doit être lancé avec sudo : sudo ./deploy.sh"
+    exit 1
+fi
+
+
+
 creer_cargo() {
 #!/usr/bin/env bash
 # setup_cargo.sh
@@ -34,10 +41,6 @@ MODULES_DIR="${DOTFILES_DIR}/modules"
 HOST_FILE="${DOTFILES_DIR}/hosts/${HOSTNAME_SHORT}.nix"
 CARGO_NIX="${MODULES_DIR}/cargo.nix"
 
-if [[ $EUID -ne 0 ]]; then
-    echo "⚠ Ce script doit être exécuté en root (sudo)." >&2
-    exit 1
-fi
 
 if [[ ! -f "$HOST_FILE" ]]; then
     echo "⚠ Fichier host introuvable : $HOST_FILE" >&2
@@ -107,7 +110,7 @@ echo "== Étape 3 : génération de ${CARGO_NIX} =="
 
 if [[ "$CARGO_MODE" == "disk" ]]; then
     cat > "$CARGO_NIX" <<'EOF'
-# Fichier généré automatiquement par setup_cargo.sh — propre à cette machine,
+# Fichier généré automatiquement par cargo.sh — propre à cette machine,
 # ne pas versionner (voir .gitignore du dépôt).
 { config, pkgs, ... }:
 {
@@ -121,7 +124,7 @@ if [[ "$CARGO_MODE" == "disk" ]]; then
 EOF
 else
     cat > "$CARGO_NIX" <<EOF
-# Fichier généré automatiquement par setup_cargo.sh — propre à cette machine,
+# Fichier généré automatiquement par cargo.sh — propre à cette machine,
 # ne pas versionner (voir .gitignore du dépôt).
 # Device codé en dur (plutôt que via vars.luksUuid) pour ne pas dépendre de
 # variables.nix dans un fichier qui n'existe que localement.
@@ -177,10 +180,6 @@ echo "✓ Terminé."
 findmnt /cargo || echo "⚠ /cargo n'apparaît pas monté, vérifie la config."
 }
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  PROVISIONNEMENT DE cargo (sous-volume ou disque monté sur /cargo
-#  Téléchargement des modèles LLM et des fichiers Kiwix (.zim) essentiels.
-# ═══════════════════════════════════════════════════════════════════════════
 provisionner_cargo() {
 
     echo ""
