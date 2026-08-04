@@ -7,8 +7,8 @@
 set -euo pipefail
 
 # Configuration des chemins
-DISTROBOX_CONFIG_DIR="${HOME}/.config/distrobox"
-ASSEMBLE_INI="${DISTROBOX_CONFIG_DIR}/assemble.ini"
+DISTROBOX_CONFIG_DIR="${HOME}/Git/mini-projects/distroboxes"
+ASSEMBLE_INI="${DISTROBOX_CONFIG_DIR}/gaming_distrobox.ini"
 DESKTOP_DIR="${HOME}/.local/share/applications"
 DESKTOP_FILE="${DESKTOP_DIR}/rtcw.desktop"
 
