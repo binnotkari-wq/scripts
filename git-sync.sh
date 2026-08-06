@@ -60,6 +60,7 @@ REPOS=(
   "user-deploy"
   "ublue-bootc"
   "mini-projects"
+  "fedora_reference-bootc"
   )
 }
 
