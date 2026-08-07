@@ -203,6 +203,7 @@ provisionner_cargo() {
     echo "Vérification des modèles LLM..."
 
     PHI4="$LLM_DIR/Phi-4-mini-instruct-Q4_K_M.gguf"
+    QWEN="$LLM_DIR/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf"
     LLAMA="$LLM_DIR/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
 
     if [[ ! -f "$PHI4" ]]; then
@@ -214,6 +215,17 @@ provisionner_cargo() {
                "https://huggingface.co/unsloth/Phi-4-mini-instruct-GGUF/resolve/main/Phi-4-mini-instruct-Q4_K_M.gguf"
     else
         echo "✓ Phi-4-mini déjà présent, téléchargement ignoré."
+    fi
+
+    if [[ ! -f "$QWEN" ]]; then
+        echo "Téléchargement de Qwen2.5-Coder..."
+        aria2c --dir="$LLM_DIR" \
+               --out="Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf" \
+               --continue=true \
+               --max-connection-per-server=4 \
+               "https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf"
+    else
+        echo "✓ Qwen2.5-Coder déjà présent, téléchargement ignoré."
     fi
 
     if [[ ! -f "$LLAMA" ]]; then
