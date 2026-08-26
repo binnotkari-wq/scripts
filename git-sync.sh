@@ -63,6 +63,7 @@ REPOS=(
   "fedora_reference-bootc"
   "fedora_custom-bootc"
   "ublue-main"
+  "post-install"
   )
 }
 
