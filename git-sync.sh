@@ -62,6 +62,7 @@ REPOS=(
   "mini-projects"
   "fedora_reference-bootc"
   "fedora_custom-bootc"
+  "ublue-main"
   )
 }
 
