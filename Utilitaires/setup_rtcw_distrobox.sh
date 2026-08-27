@@ -34,7 +34,7 @@ echo -e "${BLUE}==>${NC} Création du fichier d'assemblage : ${ASSEMBLE_INI}"
 cat << 'EOF' > "${ASSEMBLE_INI}"
 [gaming]
 image=ubuntu:24.04
-volume=/cargo:/cargo
+volume=/mnt/cargo:/mnt/cargo
 init_hooks=dpkg --add-architecture i386 && apt update && apt install -y libsdl2-2.0-0 libsdl2-2.0-0:i386 libsdl1.2debian:i386 libgl1:i386 libopenal1:i386
 EOF
 
@@ -55,8 +55,8 @@ cat << EOF > "${DESKTOP_FILE}"
 [Desktop Entry]
 Name=Return to Castle Wolfenstein
 Comment=Lancer Return to Castle Wolfenstein
-Exec=distrobox-enter --name gaming -- "/cargo/Jeux natifs/iortcw-1.51c-linux-x86_64/iowolfsp.x86_64"
-Icon=/cargo/Jeux natifs/iortcw-1.51c-linux-x86_64/WolfSP.xpm
+Exec=distrobox-enter --name gaming -- "/mnt/cargo/Jeux natifs/iortcw-1.51c-linux-x86_64/iowolfsp.x86_64"
+Icon=/mnt/cargo/Jeux natifs/iortcw-1.51c-linux-x86_64/WolfSP.xpm
 Terminal=false
 Type=Application
 Categories=Game;
