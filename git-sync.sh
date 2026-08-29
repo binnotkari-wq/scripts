@@ -51,20 +51,11 @@ setup_git_credentials() {
 definir_repos () {
 REPOS=(
   "archives"
-  "atomic-install_script"
-  "home-manager"
-  "nixos-dotfiles"
-  "nixos-install_script"
-  "pastebin"
-  "scripts"
-  "user-deploy"
-  "ublue-bootc"
   "mini-projects"
-  "fedora_reference-bootc"
-  "fedora_custom-bootc"
-  "ublue-main"
+  "nixos-dotfiles"
   "post-install"
-  "Silverblue_bootc"
+  "scripts"
+  "silverblue_bootc"
   )
 }
 
