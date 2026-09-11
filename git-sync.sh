@@ -56,6 +56,7 @@ REPOS=(
   "post-install"
   "scripts"
   "silverblue_bootc"
+  "silverblue_bootc_air-gapped"
   )
 }
 
