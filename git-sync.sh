@@ -53,6 +53,7 @@ REPOS=(
   "archives"
   "mini-projects"
   "nixos-dotfiles"
+  "offline-essentials"
   "post-install"
   "scripts"
   "silverblue_bootc"
