@@ -57,6 +57,7 @@ REPOS=(
   "post-install"
   "scripts"
   "silverblue_bootc"
+  "atomic-settings"
   )
 }
 
