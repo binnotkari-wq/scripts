@@ -11,7 +11,7 @@ cloner_pc_vers_stockage() {
   echo "lI s'agit d'une sauvegarde décrémentielle des dossiers du PC vers le disque de stockage :"
   echo "- La destination est un copie miroir de la source."
   echo "- Ajoute les nouveau fichiers, et déplace les fichiers dépréciés (pour archivage)"
-  SOURCE="/home/benoit/Mes-Donnees"
+  SOURCE="/home/$USER/Mes-Donnees"
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE" "$DESTINATION" | tee -a "$LOG_FILE"
 }
 
@@ -19,7 +19,7 @@ cloner_stockage_vers_pc() {
   echo "lI s'agit d'une sauvegarde décrémentielle des dossiers du PC vers le disque de stockage :"
   echo "- La destination est un copie miroir de la source."
   echo "- Ajoute les nouveau fichiers, et déplace les fichiers dépréciés (pour archivage)"
-  SOURCE="/home/benoit/Mes-Donnees"
+  SOURCE="/home/$USER/Mes-Donnees"
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE" "$DESTINATION" | tee -a "$LOG_FILE"
 }
 
@@ -27,7 +27,7 @@ sauvegarder_pc-dossiers-de-travail-seulement_vers_stockage() {
   echo "Il s'agit d'une sauvegarde décrémentielle des dossiers du PC vers le disque de stockage :"
   echo "- La destination est un copie miroir de la source, uniquement pour les dossiers de travail (pc mobile, qui ne contient pas de documents personnels)"
   echo "- Ajoute les nouveau fichiers, et déplace les fichiers dépréciés (pour archivage)"
-  SOURCE="/home/benoit"
+  SOURCE="/home/$USER"
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Mes-Donnees/03_Ressources_Externes/" "$DESTINATION/Mes-Donnees/03_Ressources_Externes" | tee -a "$LOG_FILE" &&
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Mes-Donnees/05_En_Cours/" "$DESTINATION/Mes-Donnees/05_En_Cours" | tee -a "$LOG_FILE" &&
   rsync -avh --delete --backup --backup-dir="$DEPRECATED_DIR" "$SOURCE/Mes-Donnees/99_Technique/" "$DESTINATION/Mes-Donnees/99_Technique" | tee -a "$LOG_FILE" &&
@@ -35,7 +35,7 @@ sauvegarder_pc-dossiers-de-travail-seulement_vers_stockage() {
 }
 
 restaurer_stockage_dossiers-de-travail-seulement_vers_pc() {
-  SOURCE="/home/benoit"
+  SOURCE="/home/$USER"
   mkdir -p "$SOURCE/Mes-Donnees/03_Ressources_Externes" &&
   mkdir -p "$SOURCE/Mes-Donnees/05_En_Cours" &&
   mkdir -p "$SOURCE/Mes-Donnees/99_Technique" &&
@@ -165,7 +165,7 @@ definir_variables_communes
 # cloner_entre_disques_sauvegarde
 
 # si on veut sauvegarder le contenu du pc :
-SOURCE="/home/benoit/Mes-Donnees" # par défaut
+SOURCE="/home/$USER/Mes-Donnees" # par défaut
 annoncer_operation
 cloner_pc_vers_stockage
 # sauvegarder_miroir_pc_vers_stockage
