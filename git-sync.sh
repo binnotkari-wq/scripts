@@ -30,31 +30,11 @@ definir_variables() {
   mkdir -p "$MY_GIT_DIR"
 }
 
-demander_email() {
-  # Récupère l'email actuel s'il existe déjà dans la config Git
-  CURRENT_EMAIL=$(git config --global user.email 2>/dev/null)
-
-  if [ -n "$CURRENT_EMAIL" ]; then
-    read -r -p "📧 Saisissez votre adresse email Git [$CURRENT_EMAIL] : " GIT_EMAIL
-    # Si l'utilisateur appuie juste sur Entrée, on conserve l'email actuel
-    GIT_EMAIL="${GIT_EMAIL:-$CURRENT_EMAIL}"
-  else
-    while [ -z "$GIT_EMAIL" ]; do
-      read -r -p "📧 Saisissez votre adresse email Git : " GIT_EMAIL
-      if [ -z "$GIT_EMAIL" ]; then
-        echo "⚠️ L'adresse email ne peut pas être vide."
-      fi
-    done
-  fi
-}
-
 setup_git_credentials() {
   echo "🔑 Configuration de l'authentification Git..."
-  
-  demander_email
 
   git config --global user.name "binnotkari-wq"
-  git config --global user.email "$GIT_EMAIL"
+  git config --global user.email "252474906+binnotkari-wq@users.noreply.github.com"
   git config --global credential.helper store
 
   # Sécurité pour éviter les erreurs de "dossier non sûr" sur NixOS
